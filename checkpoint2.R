@@ -97,3 +97,62 @@ X <- GBMD(M,N, d, t, mu, X0, sigma, rho)
 # # Everything on the same plot
 # ggplot(dat.means, aes(time,value, col=variable)) + geom_point() +
 #   stat_smooth()
+
+
+# Implement CEV as a square-root model diffusion process
+
+CEVSQ <- function(M, N, mu, sigma, t, S0, beta) # Note that beta controls the skewedness of the distribution 
+{
+  Xt <- matrix(NA, ncol = N + 1, nrow = M)
+  Xt[, 1] <- S0 ^ (2 - beta)
+  dt <- t / N
+  sqdt <- sqrt(dt)
+  
+  sigmavol <- sigma * (2 - beta)
+  
+  alpha <- mu * (beta - 2)
+  b <- sigmavol ^ 2 / 2 * (beta - 1) /mu
+  
+  d <- 4 * b * alpha / sigmavol ^ 2 # degrees of freedom 
+  
+  c <- sigmavol ^ 2 * (1 - exp(-alpha * dt)) / (4 * alpha)
+  
+  if(d > 1)
+  {
+    for(i in 1:N)
+    {
+      lambda <- Xt[, i] * exp(-alpha * dt) / c
+      Z <- matrix(rnorm(M), ncol = 1)
+      X <- rchisq(M, d - 1) # chisquare distribution like ANOVA
+      Xt[, i+1] <- c * ((Z + sqrt(lambda)) ^ 2 + X)
+    }
+  }
+  
+  if(d <= 1)
+  {
+    for(i in 1:N)
+    {
+      lambda <- Xt[, i] * exp(-alpha * dt) / c
+      NN <- matrix(rpois(M,lambda / 2), ncol = 1)
+      X <- matrix(rchisq(M, d + 2 * NN), ncol = 1) 
+      Xt[, i+1] <- c * X
+    }
+  }
+  
+  return(Xt ^ (1 / (2 - beta)))
+}
+
+M <- 10000
+N <- 2
+t <- 1
+S0 <- 100
+beta <- 2 * sigma
+sigma <- 0.4 * S0 ^ (1-sigma) # Calibrate the initial variance to GBM at S0
+
+CEV <- list(rep(NA, length(tickers)))
+
+for (i in 1:length(tickers))
+{
+  set.seed(2021)
+  CEV[[i]] <- CEVSQ(M, N, mu, sigma[i], t, S0, beta[i])
+}
