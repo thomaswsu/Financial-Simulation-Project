@@ -49,16 +49,21 @@ delta.hedge.PW <- function(M,N,S0,K,r,sigma,t,mu){
     sumS <- t(apply(X,1,cumsum))
     S <- X
     # 3. Payout function:
-    f <- function(S,K)
-    {
-      f <- pmax(S - K,0)
-      return(f)
-    }
+    # Call
+    # f <- function(S,K)
+    # {
+    #   f <- pmax(S - K,0)
+    #   return(f)
+    # }
+    
+    # Put
+    f <- function(S, K)
+        return(K - S, 0)
     
     getLastElement <- function(vec)
       return(vec[length(vec)])
     
-    Sbar.Euro <- apply(X, 1, getLastElement) # Get last value
+    Sbar.Euro <- apply(X, 1, getLastElement) - K # Get last value
     tmp <- which(Sbar.Euro > 0)
     Sbar.Euro[-tmp] <- 0
     P.Euro <- mean(Sbar.Euro)
@@ -74,7 +79,7 @@ delta.hedge.PW <- function(M,N,S0,K,r,sigma,t,mu){
       if (i < N)
       {
         Zmat.sum <- matrix(NA,nrow=M,ncol=N+1)
-        Zmat.sum[,c((i+1):(N+1))] <- t(apply(Zmat[,c((i+1):(N+1))],1,cumsum))
+        Zmat.sum[,c((i+1):(N+1))] <- t(apply(Zmat[,c((i+1):(N+1))],1,cumsum)) # Compute forward difference 
       }
       else
       {
@@ -109,7 +114,7 @@ delta.hedge.PW <- function(M,N,S0,K,r,sigma,t,mu){
     CF[,i+1] <- -1*(deltas.A[,i+1] - deltas.A[,i])*X[,i+1]
   }
   
-  Xbar <- apply(X,1,mean)
+  Xbar <- apply(X, 1, getLastElement) # CHANGE HERE TO CHANGE THE OPTION TYPE 
   IN <- which(Xbar > K)
   
   CF[IN,N+1] <- K - Xbar[IN] + deltas.A[IN,N]*X[IN,N+1]
