@@ -34,11 +34,14 @@ delta.hedge.PW <- function(M,N,S0,K,r,sigma,t,mu){
   # End Heston
   
   # Asian option price:
-  Sbar.A <- apply(X,1,mean) - K
-  tmp <- which(Sbar.A > 0)
-  Sbar.A[-tmp] <- 0
-  P.Asian <- mean(Sbar.A)
-  
+  # Sbar.A <- apply(X,1,mean) - K
+  # tmp <- which(Sbar.A > 0)
+  # print(tmp)
+  # Sbar.A[-tmp] <- 0
+  # print(Sbar.A)
+  # P.Asian <- mean(Sbar.A)
+  # print("P.Asian")
+  # print(P.Asian)
   
   # ======================
   # Pathwise Estimator
@@ -51,6 +54,15 @@ delta.hedge.PW <- function(M,N,S0,K,r,sigma,t,mu){
       f <- pmax(S - K,0)
       return(f)
     }
+    
+    getLastElement <- function(vec)
+      return(vec[length(vec)])
+    
+    Sbar.Euro <- apply(X, 1, getLastElement) # Get last value
+    tmp <- which(Sbar.Euro > 0)
+    Sbar.Euro[-tmp] <- 0
+    P.Euro <- mean(Sbar.Euro)
+    #print(Sbar.Euro)
     
     # 4. Compute discount factors (for the deltas):
     disc <- exp(-r*dt*rev(c(0:N)))
@@ -108,8 +120,8 @@ delta.hedge.PW <- function(M,N,S0,K,r,sigma,t,mu){
   PV <- CF%*%disc
   
   # compute performace
-  H.perf <- sqrt(var(PV))/P.Asian
-  outlist <- list("H.perf"=H.perf,"PV"=PV,"P.Asian"=P.Asian,
+  H.perf <- sqrt(var(PV))/P.Euro
+  outlist <- list("H.perf"=H.perf,"PV"=PV,"P.Asian"=P.Euro,
                   "deltas.A"=deltas.A,"CF"=CF)
   return(outlist)
 }
