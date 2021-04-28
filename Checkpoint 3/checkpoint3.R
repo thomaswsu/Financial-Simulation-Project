@@ -126,14 +126,15 @@ delta.hedge.CRN <- function(M,N,S0,K,r,sigma,t,mu,alpha,b,volvol,V0,call, barrie
   CF[IN,N+1] <- K - Xbar[IN] + deltas.A[IN,N]*X[IN,N+1]
   CF[-IN,N+1] <- deltas.A[-IN,N]*X[-IN,N+1]
   
-  # Account for trading costs (1%)
-  for(i in (1:length(CF)))
-    CF[i] <- CF[i] - CF[i] * 0.01
   
   
   # 3. sum the costs:
   disc <- matrix(exp(-r*seq(0,t,length=N+1)),ncol=1)
   PV <- CF%*%disc 
+  
+  # Account for trading costs (1%)
+  for(i in (1:length(PV)))
+    PV[i] <- PV[i] - PV[i] * 0.01
   
   
   # compute performace
