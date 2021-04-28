@@ -16,7 +16,9 @@ library(ggpubr)
 # Delta Hedge
 # ================
 
-delta.hedge.CRN <- function(M,N,S0,K,r,sigma,t,mu,alpha,b,volvol,V0,call){
+delta.hedge.CRN <- function(M,N,S0,K,r,sigma,t,mu,alpha,b,volvol,V0,call, b = 53){
+  # b is the argument for the barrier option. It is the "barrier" for when the option is in the money 
+  # You don't need it other wise
   print(N)
   
   # Simulate the paths and deltas...also want to save Z's:
@@ -33,8 +35,6 @@ delta.hedge.CRN <- function(M,N,S0,K,r,sigma,t,mu,alpha,b,volvol,V0,call){
     
     Zmat[, i + 1] <- Z1
     
-    # X[,i+1] <- X[,i] + mu*X[,i]*dt + sqrt(V[,i])*X[,i]*sqdt*Z1
-    # V[,i+1] <- V[,i] + alpha*(b - V[,i])*dt + volvol*sqrt(V[,i])*sqdt*Z2
     
     X[,i+1] <- X[,i] + mu*X[,i]*dt + sqrt(V[,i])*X[,i]*sqdt*Z1
     V[,i+1] <- V[,i] + alpha*(b - V[,i])*dt + volvol*sqrt(V[,i])*sqdt*Z2
@@ -74,7 +74,23 @@ delta.hedge.CRN <- function(M,N,S0,K,r,sigma,t,mu,alpha,b,volvol,V0,call){
       f <- pmax(S - K,0)
     }
   }
-  else {
+  else if(call == 2){  # Up and out barrier Euro call option { 
+    Smax <- apply(S,1,max)
+    f <- function(ST, Smax, K, b) {
+      f <- pmax(ST - K,0) # First, treat like regular call
+      f[Smax >= b] = 0 # Remove if Smax exceeds b
+      return(f)
+    }
+  }
+  else if(call == 3) {
+    Smin <- apply(S, 1, min)
+    f <- function(ST, Smin, K, b) {
+      f <- pmax(K - ST, 0) # First, treat like regular put
+      f[Smin <= b] = 0 # Remove is Smin is less than b
+      return(f)
+    }
+  }
+  else { # Euro Pu
     f <- function(S,K){
       f <- pmax(K - S,0)
     }
