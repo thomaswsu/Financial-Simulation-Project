@@ -16,8 +16,8 @@ library(ggpubr)
 # Delta Hedge
 # ================
 
-delta.hedge.CRN <- function(M,N,S0,K,r,sigma,t,mu,alpha,b,volvol,V0,call, b = 53){
-  # b is the argument for the barrier option. It is the "barrier" for when the option is in the money 
+delta.hedge.CRN <- function(M,N,S0,K,r,sigma,t,mu,alpha,b,volvol,V0,call, barrier = 53){
+  # barrier is the argument for the barrier option. It is the "barrier" for when the option is in the money 
   # You don't need it other wise
   print(N)
   
@@ -76,17 +76,17 @@ delta.hedge.CRN <- function(M,N,S0,K,r,sigma,t,mu,alpha,b,volvol,V0,call, b = 53
   }
   else if(call == 2){  # Up and out barrier Euro call option { 
     Smax <- apply(S,1,max)
-    f <- function(ST, Smax, K, b) {
+    f <- function(ST, Smax, K) {
       f <- pmax(ST - K,0) # First, treat like regular call
-      f[Smax >= b] = 0 # Remove if Smax exceeds b
+      f[Smax >= barrier] = 0 # Remove if Smax exceeds b
       return(f)
     }
   }
   else if(call == 3) {
     Smin <- apply(S, 1, min)
-    f <- function(ST, Smin, K, b) {
+    f <- function(ST, Smin, K) {
       f <- pmax(K - ST, 0) # First, treat like regular put
-      f[Smin <= b] = 0 # Remove is Smin is less than b
+      f[Smin <= barrier] = 0 # Remove is Smin is less than b
       return(f)
     }
   }
@@ -153,9 +153,15 @@ delta.hedge.CRN <- function(M,N,S0,K,r,sigma,t,mu,alpha,b,volvol,V0,call, b = 53
   CF[IN,N+1] <- K - Xbar[IN] + deltas.A[IN,N]*X[IN,N+1]
   CF[-IN,N+1] <- deltas.A[-IN,N]*X[-IN,N+1]
   
+  # Account for trading costs (1%)
+  for(i in (1:length(CF)))
+    CF[i] <- CF[i] - CF[i] * 0.01
+  
+  
   # 3. sum the costs:
   disc <- matrix(exp(-r*seq(0,t,length=N+1)),ncol=1)
-  PV <- CF%*%disc
+  PV <- CF%*%disc 
+  
   
   # compute performace
   H.perf <- sqrt(var(PV))/P.Euro
