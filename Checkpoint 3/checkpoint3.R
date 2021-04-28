@@ -206,3 +206,5 @@ CRN.means <- apply(CRN.1$deltas.A,2,mean)
 CRN.sd <- sqrt(apply(CRN.1$deltas.A,2,var))
 print(CRN.means)
 print(CRN.sd)
+
+# I made changes
