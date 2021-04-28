@@ -115,9 +115,11 @@ delta.hedge.CRN <- function(M,N,S0,K,r,sigma,t,mu,alpha,b,volvol,V0,call, barrie
   
   # Generate a matrix of positions:
   CF <- matrix(NA,ncol=N+1,nrow=M)
-  CF[,1] <- -deltas.A[,1]*S0
+  CF[,1] <- -deltas.A[,1]*S0 
+  CF[,1] <- CF[,1] - CF[i] * 0.01 # Account for trading costs (1%)
   for (i in 1:(N-1)){
     CF[,i+1] <- -1*(deltas.A[,i+1] - deltas.A[,i])*X[,i+1]
+    CF[,i+1] <- CF[,i+1] - CF[,i+1] * 0.01 # Account for trading costs (1%)
   }
   
   Xbar <- apply(X,1,mean)
@@ -127,17 +129,12 @@ delta.hedge.CRN <- function(M,N,S0,K,r,sigma,t,mu,alpha,b,volvol,V0,call, barrie
   CF[-IN,N+1] <- deltas.A[-IN,N]*X[-IN,N+1]
   
   
-  
   # 3. sum the costs:
   disc <- matrix(exp(-r*seq(0,t,length=N+1)),ncol=1)
   PV <- CF%*%disc 
   
-  # Account for trading costs (1%)
-  for(i in (1:length(PV)))
-    PV[i] <- PV[i] - PV[i] * 0.01
   
-  
-  # compute performace
+  # compute performance
   H.perf <- sqrt(var(PV))/P.Euro
   outlist <- list("H.perf"=H.perf,"PV"=PV,"P.Euro"=P.Euro,
                   "deltas.A"=deltas.A,"CF"=CF)
