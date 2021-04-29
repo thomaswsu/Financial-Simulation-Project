@@ -38,6 +38,25 @@ sigma <- apply(returns, 2, function(x) sd(x, na.rm = TRUE))
 mu <- (1 + mu) ** 252 - 1
 sigma <- 252 * sigma
 
+# Calculate volvol 
+tickers <- c("VIX") # Get S&P 500 data
+P.list <- lapply(tickers, function(x) get(getSymbols(x, from = "2001-04-28")))
+
+sapply(P.list,nrow)
+
+# Get the adjusted prices into a single object
+P.adj <- lapply(P.list, function(p) p[,6])
+
+# Merge the elements of the list
+P <- Reduce(merge, P.adj)
+names(P) <- tickers
+
+# Use mean return to compute expected return 
+# Calculate daily return 
+returns <- P / lag(P) - 1
+
+volvol <- apply(returns, 2, function(x) sd(x, na.rm = TRUE))
+
 
 # ================
 # Delta Hedge
@@ -226,7 +245,6 @@ h <- 0.1
 alpha <- 2
 b <- 0.16
 V0 <- 0.4
-volvol <- 0.3 
 set.seed(2021)
 CRN.1 <- delta.hedge.CRN(M,N,S0,K,r,sigma,t,mu,alpha,b,volvol,V0,call=1)
 CRN.means <- apply(CRN.1$deltas.A,2,mean)
