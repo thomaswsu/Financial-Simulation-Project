@@ -131,6 +131,7 @@ delta.hedge.CRN <- function(M,N,S0,K,r,sigma,t,mu,alpha,b,volvol,V0,call, barrie
   if (call == 1){
     f <- function(S,K){
       f <- pmax(S - K,0)
+      premium<-P.Euro
     }
   }else if(call == 2){  # Up and out barrier Euro call option { 
     Smax <- apply(S,1,max)
@@ -154,30 +155,30 @@ delta.hedge.CRN <- function(M,N,S0,K,r,sigma,t,mu,alpha,b,volvol,V0,call, barrie
   
   #4 now that the pay off function is set we can use a binomial lattice to calculate the options prices
     #calibrate the lattice with CRR
-  u <- exp(sigma*sqrt(dt))
-  d <- 1/u
-  p <- (exp(r*dt) - d) / (u - d)
-  q<-1-p
-  disc <- exp(-r*dt)
-  vec <- rep(NA,length=(2*N+1))
+ # u <- exp(sigma*sqrt(dt))
+ # d <- 1/u
+ # p <- (exp(r*dt) - d) / (u - d)
+ # q<-1-p
+ # disc <- exp(-r*dt)
+ # vec <- rep(NA,length=(2*N+1))
   
-  # Populate the terminal payoffs:
-  NN <- length(vec)
-  nu <- matrix(seq(N,0),ncol=1)
-  nd <- matrix(seq(0,N),ncol=1)
-  vec[seq(1,NN,by=2)] <- f(S0 * u ^ nu * d ^ nd,K)
+ # # Populate the terminal payoffs:
+ # NN <- length(vec)
+ # nu <- matrix(seq(N,0),ncol=1)
+ # nd <- matrix(seq(0,N),ncol=1)
+ # vec[seq(1,NN,by=2)] <- f(S0 * u ^ nu * d ^ nd,K)
   
-  # Solve by backward induction:
-  for (i in 1:N){
-    opts <- vec[seq(i,NN-i+1,by=2)]
-    vec[seq(1+i,NN-i,by=2)] <- disc*(p*opts[1:(length(opts)-1)] +
-                                       q*opts[2:(length(opts))])
-  }
-  premium<-vec[N+1]
-  
-  # 4. Compute discount factors (for the deltas):
-  #disc <- exp(-r*dt*rev(c(0:N)))
-  
+ # # Solve by backward induction:
+ # for (i in 1:N){
+ #   opts <- vec[seq(i,NN-i+1,by=2)]
+ #   vec[seq(1+i,NN-i,by=2)] <- disc*(p*opts[1:(length(opts)-1)] +
+ #                                      q*opts[2:(length(opts))])
+ # }
+ # premium<-vec[N+1]
+ # 
+ # 4. Compute discount factors (for the deltas):
+ #disc <- exp(-r*dt*rev(c(0:N)))
+    
   # 5. Finally compute the deltas over time:
   deltas.A <- matrix(NA,ncol=N+1,nrow=M)
   
