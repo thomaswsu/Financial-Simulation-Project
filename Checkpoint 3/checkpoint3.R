@@ -124,10 +124,10 @@ delta.hedge.CRN <- function(M,N,S0,K,r,sigma,t,mu,alpha,b,volvol,V0,call, barrie
   # Generate a matrix of positions:
   CF <- matrix(NA,ncol=N+1,nrow=M)
   CF[,1] <- -deltas.A[,1]*S0 
-  CF[,1] <- CF[,1] - CF[i] * 0.01 # Account for trading costs (1%)
+  CF[,1] <- CF[,1] - abs(CF[i] * 0.01) # Account for trading costs (1%)
   for (i in 1:(N-1)){
     CF[,i+1] <- -1*(deltas.A[,i+1] - deltas.A[,i])*X[,i+1]
-    CF[,i+1] <- CF[,i+1] - CF[,i+1] * 0.01 # Account for trading costs (1%)
+    CF[,i+1] <- CF[,i+1] - abs(CF[,i+1] * 0.01) # Account for trading costs (1%)
   }
   
   Xbar <- apply(X,1,mean)
