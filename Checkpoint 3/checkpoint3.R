@@ -9,7 +9,34 @@ library(ggpubr)
 # install.packages("reshape2")
 # install.packages("ggpubr")
 
+# ===============
+# Get market data
+# ===============
+tickers <- c("SPY") # Get S&P 500 data
+P.list <- lapply(tickers, function(x) get(getSymbols(x, from = "2001-04-28")))
 
+sapply(P.list,nrow)
+
+# Get the adjusted prices into a single object
+P.adj <- lapply(P.list, function(p) p[,6])
+
+# Merge the elements of the list
+P <- Reduce(merge, P.adj)
+names(P) <- tickers
+
+# Use mean return to compute expected return 
+# Calculate daily return 
+returns <- P / lag(P) - 1
+
+# Calculate mean return for all non-empty observations (We remove the the NA)
+mu <- apply(returns, 2, function(x) mean(x, na.rm = TRUE)) 
+
+# Calculate standard deviation
+sigma <- apply(returns, 2, function(x) sd(x, na.rm = TRUE)) 
+
+# Annualize the data 
+mu <- (1 + mu) ** 252 - 1
+sigma <- 252 * sigma
 
 
 # ================
@@ -192,9 +219,7 @@ delta.hedge.CRN <- function(M,N,S0,K,r,sigma,t,mu,alpha,b,volvol,V0,call, barrie
 S0 <- 49
 K <- 50
 r <- 0.05
-sigma <- 0.20
 t <- 20/52
-mu <- 0.13
 M <- 500
 N <- 12
 h <- 0.1
