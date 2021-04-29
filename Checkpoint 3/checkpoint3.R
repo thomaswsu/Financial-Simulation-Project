@@ -133,8 +133,31 @@ delta.hedge.CRN <- function(M,N,S0,K,r,sigma,t,mu,alpha,b,volvol,V0,call, barrie
     }
   }
   
+  #4 now that the pay off function is set we can use a binomial lattice to calculate the options prices
+    #calibrate the lattice with CRR
+  u <- exp(sigma*sqrt(dt))
+  d <- 1/u
+  p <- (exp(r*dt) - d) / (u - d)
+  q<-1-p
+  disc <- exp(-r*dt)
+  vec <- rep(NA,length=(2*N+1))
+  
+  # Populate the terminal payoffs:
+  NN <- length(vec)
+  nu <- matrix(seq(N,0),ncol=1)
+  nd <- matrix(seq(0,N),ncol=1)
+  vec[seq(1,NN,by=2)] <- f(S0 * u ^ nu * d ^ nd,K)
+  
+  # Solve by backward induction:
+  for (i in 1:N){
+    opts <- vec[seq(i,NN-i+1,by=2)]
+    vec[seq(1+i,NN-i,by=2)] <- disc*(p*opts[1:(length(opts)-1)] +
+                                       q*opts[2:(length(opts))])
+  }
+  premium<-vec[N+1]
+  
   # 4. Compute discount factors (for the deltas):
-  disc <- exp(-r*dt*rev(c(0:N)))
+  #disc <- exp(-r*dt*rev(c(0:N)))
   
   # 5. Finally compute the deltas over time:
   deltas.A <- matrix(NA,ncol=N+1,nrow=M)
@@ -173,7 +196,7 @@ delta.hedge.CRN <- function(M,N,S0,K,r,sigma,t,mu,alpha,b,volvol,V0,call, barrie
   
   # Generate a matrix of positions:
   CF <- matrix(NA,ncol=N+1,nrow=M)
-  CF[,1] <- -deltas.A[,1]*S0 
+  CF[,1] <- -deltas.A[,1]*S0 + premium
   CF[,1] <- CF[,1] - abs(CF[i] * 0.01) # Account for trading costs (1%)
   for (i in 1:(N-1)){
     CF[,i+1] <- -1*(deltas.A[,i+1] - deltas.A[,i])*X[,i+1]
