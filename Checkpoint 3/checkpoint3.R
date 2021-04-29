@@ -131,8 +131,8 @@ delta.hedge.CRN <- function(M,N,S0,K,r,sigma,t,mu,alpha,b,volvol,V0,call, barrie
   if (call == 1){
     f <- function(S,K){
       f <- pmax(S - K,0)
-      premium<-P.Euro
     }
+    premium<-P.Euro
   }else if(call == 2){  # Up and out barrier Euro call option { 
     Smax <- apply(S,1,max)
     f <- function(ST, K) {
