@@ -275,3 +275,15 @@ CRN.means <- apply(CRN.1$deltas.A,2,mean)
 CRN.sd <- sqrt(apply(CRN.1$deltas.A,2,var))
 print(CRN.means)
 print(CRN.sd)
+
+# for testing code
+N <- c(4,5,10,20,40,80,100)
+H <- c(NA)
+PV <- c(NA)
+for (j in 1:length(N)){
+  tmp <-  delta.hedge.CRN(M,N[j],S0,K,r,sigma,t,mu,alpha,b,volvol,V0,call=1)
+  H[j] <- tmp$H.perf
+  PV[j] <- mean(tmp$PV)
+}
+print(H)
+print(PV)
