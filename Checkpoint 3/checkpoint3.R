@@ -48,10 +48,33 @@ delta.hedge.CRN <- function(M,N,S0,K,r,sigma,t,mu,alpha,b,volvol,V0,call, barrie
   getLastElement <- function(vec){
     return(vec[length(vec)])
   }
-  Sbar.Euro <- apply(X, 1, getLastElement) - K # Get last value
+  
+  Sbar.Euro <- apply(X, 1, getLastElement) - K # Get last value do K - apply(X, 1, getLastElement) for put 
   tmp <- which(Sbar.Euro > 0)
   Sbar.Euro[-tmp] <- 0
   P.Euro <- mean(Sbar.Euro)
+  
+  # Barrier option 
+  barrierPrice <- function(vec, call = TRUE) { # CHANGE THIS FOR PUT
+    if(call) {
+      
+      Smax <- max(vec) # If put Smin <- apply(S, 1, min)
+      if(Smax >= barrier)
+        return(0)
+      return(vec[length(vec)])
+    }
+    else {
+      Smin <- min(vec) # If put Smin <- apply(S, 1, min)
+      if(Smin <= barrier)
+        return(0)
+      return(vec[length(vec)])
+    }
+  }
+  
+  Sbar.Barrier <- apply(X, 1, barrierPrice) - K # Get last value do K - apply(X, 1, barrier) for put 
+  tmp <- which(Sbar.Barrier > 0)
+  Sbar.Barrier[-tmp] <- 0
+  P.Barrier <- mean(Sbar.Barrier)
   
   
   # ======================
@@ -65,14 +88,14 @@ delta.hedge.CRN <- function(M,N,S0,K,r,sigma,t,mu,alpha,b,volvol,V0,call, barrie
     }
   }else if(call == 2){  # Up and out barrier Euro call option { 
     Smax <- apply(S,1,max)
-    f <- function(ST, Smax, K) {
+    f <- function(ST, K) {
       f <- pmax(ST - K,0) # First, treat like regular call
       f[Smax >= barrier] = 0 # Remove if Smax exceeds b
       return(f)
     }
   }else if(call == 3) {
     Smin <- apply(S, 1, min)
-    f <- function(ST, Smin, K) {
+    f <- function(ST, K) {
       f <- pmax(K - ST, 0) # First, treat like regular put
       f[Smin <= barrier] = 0 # Remove is Smin is less than b
       return(f)
