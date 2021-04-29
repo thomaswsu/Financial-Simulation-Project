@@ -89,14 +89,15 @@ delta.hedge.CRN <- function(M,N,S0,K,r,sigma,t,mu,alpha,b,volvol,V0,call, barrie
   # 5. Finally compute the deltas over time:
   deltas.A <- matrix(NA,ncol=N+1,nrow=M)
   
-  delta_CRN <- function(S,K,r,t,sigma){
+  delta_CRN <- function(S,V,K,r,sigma){
     fd<-rep(0,M)
+    sqdt <- sqrt(dt)
     for (j in 1:M){
       ss <- sample(100000000,1)
       set.seed(ss)
-      ST <- (S[j]-h)*exp((r - 0.5*sigma^2)*t+sigma*sqrt(t)*rnorm(M))
+      ST <- (S[j]-h) + mu*S[j]*dt + sqrt(V[j])*S[j]*sqdt*rnorm(M)
       set.seed(ss)
-      STh <- (S[j]+h)*exp((r - 0.5*sigma^2)*t+sigma*sqrt(t)*rnorm(M))
+      STh <- (S[j]+h) + mu*S[j]*dt + sqrt(V[j])*S[j]*sqdt*rnorm(M)
       f0 <- f(ST,K)
       f0h <- f(STh,K)
       fd[j] <- exp(-r*t)*mean((f0h - f0) / (2*h))
@@ -104,12 +105,19 @@ delta.hedge.CRN <- function(M,N,S0,K,r,sigma,t,mu,alpha,b,volvol,V0,call, barrie
     return(fd)
   }
   for (i in 1:N){
-    ttm <- t - dt*(i-1)
-    deltas.A[,i] <- delta_CRN(X[,i],K,r,ttm,sigma)
+    deltas.A[,i] <- delta_CRN(X[,i],V[,i],K,r,sigma)
   }
   
   # Fill in terminal deltas (1/0):
-  deltas.A[,N+1] <- delta_CRN(X[,N+1],K,r,0,sigma)
+  temp<-f(X[,N+1],K)
+  for(j in 1:M){
+    if(temp[j]>1e-6){
+      temp[j]<-1
+    }else{
+      temp[j]<-0
+    }
+  }
+  deltas.A[,N+1] <- temp
   
   
   
