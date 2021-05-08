@@ -62,7 +62,7 @@ volvol <- apply(returns, 2, function(x) sd(x, na.rm = TRUE))
 # Delta Hedge
 # ================
 
-delta.hedge.CRN <- function(M,N,S0,K,r,sigma,t,mu,alpha,b,volvol,V0,call, barrier = 53){
+delta.hedge.CRN <- function(M,N,S0,K,r,sigma,t,mu,alpha,b,volvol,V0,call, barrier = S0 + 10){
   # barrier is the argument for the barrier option. It is the "barrier" for when the option is in the money 
   # You don't need it other wise
   print(N)
